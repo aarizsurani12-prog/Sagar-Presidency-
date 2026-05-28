@@ -140,15 +140,20 @@
   .gal-tab{padding:9px 22px;border-radius:30px;font-size:.82rem;letter-spacing:.5px;font-weight:500;cursor:pointer;border:1.5px solid var(--sand-deep);background:var(--cream);color:var(--ink);transition:.25s}
   .gal-tab:hover{border-color:var(--sea);color:var(--sea)}
   .gal-tab.active{background:var(--sea-deep);color:#fff;border-color:var(--sea-deep)}
-  .gal-grid{columns:4;column-gap:14px}
-  .gal-item{break-inside:avoid;margin-bottom:14px;border-radius:16px;overflow:hidden;position:relative;cursor:pointer;display:block}
-  .gal-item img{width:100%;height:auto;display:block;transition:.45s}
+  .gal-grid-wrap{position:relative}
+  .gal-grid-wrap::after{content:'';position:absolute;bottom:0;left:0;right:8px;height:56px;background:linear-gradient(transparent,var(--foam));pointer-events:none;border-radius:0 0 16px 16px}
+  .gal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-height:520px;overflow-y:auto;padding-right:4px;scroll-behavior:smooth}
+  .gal-grid::-webkit-scrollbar{width:5px}
+  .gal-grid::-webkit-scrollbar-track{background:transparent}
+  .gal-grid::-webkit-scrollbar-thumb{background:var(--sand-deep);border-radius:3px}
+  .gal-grid::-webkit-scrollbar-thumb:hover{background:var(--sea-light)}
+  .gal-item{border-radius:16px;overflow:hidden;position:relative;cursor:pointer;display:block;aspect-ratio:4/3}
+  .gal-item img{width:100%;height:100%;object-fit:cover;display:block;transition:.45s}
   .gal-item:hover img{transform:scale(1.04)}
   .gal-overlay{position:absolute;inset:0;background:linear-gradient(transparent 45%,rgba(15,76,92,.78));opacity:0;transition:.35s;display:flex;align-items:flex-end;padding:16px}
   .gal-overlay span{color:#fff;font-size:.78rem;letter-spacing:1px;text-transform:uppercase;font-weight:500}
   .gal-item:hover .gal-overlay{opacity:1}
-  .gal-item[data-cat]{transition:opacity .3s,transform .3s}
-  .gal-item.hidden{opacity:0;pointer-events:none;position:absolute}
+  .gal-item.hidden{display:none}
 
   /* Lightbox */
   .lb{position:fixed;inset:0;z-index:999;background:rgba(10,30,36,.92);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:.3s;backdrop-filter:blur(8px)}
@@ -218,7 +223,7 @@
     .room-grid,.amen-grid,.rules-grid{grid-template-columns:1fr 1fr}
     .amen-pills{gap:8px}
     .contact-grid{grid-template-columns:1fr}
-    .gal-grid{columns:2}
+    .gal-grid{grid-template-columns:repeat(2,1fr)}
     .lb-prev{left:-46px}.lb-next{right:-46px}
   }
   @media(max-width:600px){
@@ -228,7 +233,7 @@
     .nav-links a{color:#fff!important;font-size:1rem}
     .burger{display:flex;z-index:200}
     .room-grid,.amen-grid,.rules-grid{grid-template-columns:1fr}
-    .gal-grid{columns:1}
+    .gal-grid{grid-template-columns:repeat(2,1fr)}
     .lb-prev{left:4px}.lb-next{right:4px}
     .two{grid-template-columns:1fr}
     section{padding:80px 0}
@@ -369,7 +374,8 @@
     </div>
 
     <!-- Masonry grid -->
-    <div class="gal-grid reveal" id="galGrid">
+    <div class="gal-grid-wrap reveal">
+    <div class="gal-grid" id="galGrid">
 
       <!-- Outdoor -->
       <a class="gal-item" data-cat="outdoor" data-label="Hotel Exterior">
@@ -494,6 +500,7 @@
       </a>
 
     </div><!-- /gal-grid -->
+    </div><!-- /gal-grid-wrap -->
   </div>
 
   <!-- Lightbox -->
@@ -756,7 +763,7 @@
       const f=tab.dataset.filter;
       items.forEach(item=>{
         const show=f==='all'||item.dataset.cat===f;
-        item.style.display=show?'block':'none';
+        item.style.display=show?'':'none';
       });
     });
   });
@@ -767,7 +774,7 @@
   const lbCap=document.getElementById('lbCap');
   let visibleItems=[],lbIdx=0;
 
-  function getVisible(){return[...document.querySelectorAll('.gal-item[data-cat]')].filter(el=>el.style.display!=='none')}
+  function getVisible(){return[...document.querySelectorAll('.gal-item[data-cat]')].filter(el=>el.style.display!=='none'&&el.offsetParent!==null)}
   function openLb(idx){
     visibleItems=getVisible();
     lbIdx=idx;
