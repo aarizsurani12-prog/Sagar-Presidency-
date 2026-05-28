@@ -195,6 +195,7 @@
   .field input,.field select{width:100%;padding:13px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-family:'Outfit';font-size:.95rem}
   .field input::placeholder{color:rgba(255,255,255,.5)}
   .field input:focus,.field select:focus{outline:none;border-color:var(--coral-soft)}
+  .field input.invalid,.field select.invalid{border-color:rgba(220,53,69,.6)!important;background:rgba(220,53,69,.1)!important}
   .field select option{color:#13363f}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .book-box .btn-primary{width:100%;justify-content:center;margin-top:8px}
@@ -615,7 +616,7 @@
           <div class="field"><label>Check-out</label><input type="date" id="bk-out"></div>
         </div>
         <div class="two">
-          <div class="field"><label>Guests</label><select id="bk-guests"><option>1 Guest</option><option selected>2 Guests</option><option>3 Guests</option><option>4+ Guests</option></select></div>
+          <div class="field"><label>Guests</label><select id="bk-guests"><option>1 Guest</option><option selected>2 Guests</option><option>3 Guests</option><option>4 Guests</option><option>5+ Guests</option></select></div>
           <div class="field"><label>Room</label><select id="bk-room"><option>Deluxe Room</option><option>Executive Room</option><option>Premium Room</option></select></div>
         </div>
         <button class="btn btn-primary" id="bk-submit">Send Enquiry →</button>
@@ -816,39 +817,55 @@
   }
 
   document.getElementById('bk-submit').addEventListener('click', () => {
-    const nameVal  = document.getElementById('bk-name').value.trim();
-    const emailVal = document.getElementById('bk-email').value.trim();
-    const phoneVal = document.getElementById('bk-phone').value.trim();
+    const f = {
+      name:  document.getElementById('bk-name'),
+      email: document.getElementById('bk-email'),
+      phone: document.getElementById('bk-phone'),
+      in:    document.getElementById('bk-in'),
+      out:   document.getElementById('bk-out'),
+    };
 
-    if (!nameVal || (!emailVal && !phoneVal)) {
-      showMsg('Please enter your name and at least an email or phone number.', 'err');
-      return;
+    Object.values(f).forEach(el => el.classList.remove('invalid'));
+
+    let valid = true;
+
+    if (!f.name.value.trim()) { f.name.classList.add('invalid'); valid = false; }
+
+    const emailVal = f.email.value.trim();
+    if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+      f.email.classList.add('invalid'); valid = false;
     }
+
+    const phoneDigits = f.phone.value.replace(/\D/g, '');
+    if (phoneDigits.length < 10) { f.phone.classList.add('invalid'); valid = false; }
+
+    if (!f.in.value) { f.in.classList.add('invalid'); valid = false; }
+
+    if (!f.out.value) {
+      f.out.classList.add('invalid'); valid = false;
+    } else if (f.in.value && f.out.value <= f.in.value) {
+      f.out.classList.add('invalid'); valid = false;
+    }
+
+    if (!valid) return;
 
     const btn = document.getElementById('bk-submit');
     btn.disabled = true;
     btn.textContent = 'Sending…';
 
     emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      name:     nameVal,
+      name:     f.name.value.trim(),
       email:    emailVal,
-      phone:    phoneVal,
-      checkin:  document.getElementById('bk-in').value,
-      checkout: document.getElementById('bk-out').value,
+      phone:    f.phone.value.trim(),
+      checkin:  f.in.value,
+      checkout: f.out.value,
       guests:   document.getElementById('bk-guests').value,
       room:     document.getElementById('bk-room').value,
     }).then(() => {
       showMsg('Thank you — your enquiry has been sent. We’ll be in touch soon to confirm your stay.', 'ok');
-      document.getElementById('bk-name').value  = '';
-      document.getElementById('bk-email').value = '';
-      document.getElementById('bk-phone').value = '';
-      document.getElementById('bk-in').value    = '';
-      document.getElementById('bk-out').value   = '';
-      document.getElementById('bk-guests').selectedIndex = 1;
-      document.getElementById('bk-room').selectedIndex   = 0;
+      setTimeout(() => location.reload(), 2500);
     }).catch(() => {
-      showMsg('Sorry, something went wrong sending your enquiry. Please call us at 098983 87921 or message us on WhatsApp.', 'err');
-    }).finally(() => {
+      showMsg('Sorry, something went wrong sending your enquiry. Please call us at 098983 87921 or message us on WhatsApp.', 'err');
       btn.disabled = false;
       btn.textContent = 'Send Enquiry →';
     });
