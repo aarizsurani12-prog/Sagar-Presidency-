@@ -117,6 +117,7 @@
   .room-price .amt small{font-size:.8rem;font-family:'Outfit';color:#5a6e73}
   .room-price a{color:var(--coral);font-size:.85rem;font-weight:600;letter-spacing:.5px}
   .room-price a:hover{text-decoration:underline}
+  .room-price .amt.contact{font-size:1rem;font-family:'Outfit';color:var(--coral);font-weight:600;letter-spacing:.3px;align-self:center}
 
   /* ---------- AMENITIES ---------- */
   .amen-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
@@ -288,7 +289,7 @@
           <h3>Deluxe Room</h3>
           <p>A cosy 120 sq.ft room with a double bed, blackout curtains, and flat-screen TV — ideal for a relaxed coastal break.</p>
           <div class="room-feat"><span>Double Bed</span><span>120 sq.ft</span><span>Sleeps 3</span><span>AC</span><span>Flat-screen TV</span></div>
-          <div class="room-price"><span class="amt">from ₹3,268<small> / night</small></span><a href="#contact">Book →</a></div>
+          <div class="room-price"><span class="amt contact">Contact for Price</span><a href="#contact">Book →</a></div>
         </div>
       </div>
       <div class="room-card reveal" data-room-id="executive">
@@ -297,7 +298,7 @@
           <h3>Executive Room</h3>
           <p>A spacious 150 sq.ft room with a double bed and premium finishes — a step up in comfort for a memorable stay.</p>
           <div class="room-feat"><span>Double Bed</span><span>150 sq.ft</span><span>Sleeps 3</span><span>AC</span><span>Flat-screen TV</span></div>
-          <div class="room-price"><span class="amt">from ₹3,420<small> / night</small></span><a href="#contact">Book →</a></div>
+          <div class="room-price"><span class="amt contact">Contact for Price</span><a href="#contact">Book →</a></div>
         </div>
       </div>
       <div class="room-card reveal" data-room-id="premium">
@@ -306,7 +307,7 @@
           <h3>Premium Room</h3>
           <p>Our 180 sq.ft flagship room with a king bed — perfect for families or anyone who likes room to spread out.</p>
           <div class="room-feat"><span>King Bed</span><span>180 sq.ft</span><span>Sleeps 4</span><span>AC</span><span>Flat-screen TV</span></div>
-          <div class="room-price"><span class="amt">from ₹3,800<small> / night</small></span><a href="#contact">Book →</a></div>
+          <div class="room-price"><span class="amt contact">Contact for Price</span><a href="#contact">Book →</a></div>
         </div>
       </div>
     </div>
@@ -703,28 +704,39 @@
   // Format a number with the Indian thousands grouping (e.g. 312500 → "3,12,500").
   function fmtINR(n) { return n.toLocaleString('en-IN'); }
 
+  // Write "Contact for Price" into the .amt element of the matching room card.
+  function applyContactPrice(roomId) {
+    const card = document.querySelector('.room-card[data-room-id="' + roomId + '"]');
+    if (!card) return;
+    const amt = card.querySelector('.amt');
+    if (!amt) return;
+    amt.className = 'amt contact';
+    amt.textContent = 'Contact for Price';
+  }
+
   // Write a price into the .amt element of the matching room card.
   function applyPrice(roomId, price) {
     const card = document.querySelector('.room-card[data-room-id="' + roomId + '"]');
     if (!card) return;
     const amt = card.querySelector('.amt');
     if (!amt) return;
+    amt.className = 'amt';
     amt.innerHTML = 'from ₹' + fmtINR(price) + '<small> / night</small>';
   }
 
-  // Fetch prices from the CSV sheet and update cards; fall back silently on any failure.
+  // Fetch prices from the CSV sheet and update cards; show "Contact for Price" on any failure.
   async function loadPrices() {
-    // Apply fallbacks first so the page is never left with stale or blank prices.
-    Object.entries(PRICE_FALLBACK).forEach(([id, p]) => applyPrice(id, p));
+    // Default all cards to "Contact for Price" — replaced only if the sheet returns valid data.
+    Object.keys(PRICE_FALLBACK).forEach(id => applyContactPrice(id));
 
-    if (!PRICES_CSV_URL) return; // No URL configured — stay on fallbacks.
+    if (!PRICES_CSV_URL) return; // No URL configured — stay on "Contact for Price".
 
     try {
       // Append timestamp for cache-busting; Google Sheets CDN can cache aggressively.
       const sep = PRICES_CSV_URL.includes('?') ? '&' : '?';
       const url = PRICES_CSV_URL + sep + '_t=' + Date.now();
       const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) return; // Sheet deleted, unpublished, or network error — keep fallbacks.
+      if (!res.ok) return; // Sheet deleted, unpublished, or network error — keep "Contact for Price".
 
       const rows = parseCSV(await res.text());
       rows.forEach(row => {
@@ -736,7 +748,7 @@
         }
       });
     } catch (_) {
-      // Sheet unreachable / CORS / malformed CSV — fallbacks are already applied above.
+      // Sheet unreachable / CORS / malformed CSV — "Contact for Price" is already shown above.
     }
   }
 
